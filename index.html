@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0a0a0f">
+<title>StockTagger Pro — AI Metadata Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: dark;
+  --bg:#0a0a0f; --bg2:#0f0f16; --panel:#15151f; --panel2:#1a1a26; --panel3:#20202e;
+  --line:rgba(255,255,255,.06); --line2:rgba(255,255,255,.1); --line3:rgba(255,255,255,.16);
+  --ink:#f5f3ff; --sub:#a5a1b8; --muted:#6c687d;
+  --accent:#a78bfa; --accent2:#7c3aed; --accent3:#c4b5fd; --accent-soft:rgba(167,139,250,.12); --accent-ink:#0a0a0f;
+  --ok:#4ade80; --ok-bg:rgba(74,222,128,.12); --err:#f87171; --err-bg:rgba(248,113,113,.12);
+  --warn:#fbbf24; --warn-bg:rgba(251,191,36,.12);
+  --grad:linear-gradient(135deg,#a78bfa 0%,#7c3aed 50%,#6d28d9 100%);
+  --grad-soft:linear-gradient(135deg,rgba(167,139,250,.15),rgba(124,58,237,.08));
+  --shadow:0 4px 24px rgba(0,0,0,.4), 0 1px 2px rgba(0,0,0,.3);
+  --shadow-lg:0 20px 60px rgba(0,0,0,.5), 0 8px 24px rgba(124,58,237,.15);
+  --glow:0 0 40px rgba(167,139,250,.25);
+}
+:root[data-theme="light"]{
+  color-scheme: light;
+  --bg:#f8f7fc; --bg2:#ffffff; --panel:#ffffff; --panel2:#f4f2fa; --panel3:#eae6f5;
+  --line:rgba(0,0,0,.05); --line2:rgba(0,0,0,.08); --line3:rgba(0,0,0,.14);
+  --ink:#1a1625; --sub:#5a5470; --muted:#8b86a0;
+  --accent:#7c3aed; --accent2:#6d28d9; --accent3:#a78bfa; --accent-soft:rgba(124,58,237,.08); --accent-ink:#ffffff;
+  --ok:#16a34a; --ok-bg:rgba(22,163,74,.1); --err:#dc2626; --err-bg:rgba(220,38,38,.1);
+  --warn:#d97706; --warn-bg:rgba(217,119,6,.1);
+  --grad:linear-gradient(135deg,#7c3aed 0%,#6d28d9 50%,#5b21b6 100%);
+  --shadow:0 4px 20px rgba(124,58,237,.08), 0 1px 3px rgba(0,0,0,.04);
+  --shadow-lg:0 20px 50px rgba(124,58,237,.15), 0 8px 20px rgba(0,0,0,.06);
+  --glow:0 0 30px rgba(124,58,237,.15);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;font-feature-settings:"cv02","cv03","cv04","cv11";overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(1000px 600px at 15% -10%,rgba(167,139,250,.15),transparent 60%),
+  radial-gradient(800px 500px at 90% 10%,rgba(124,58,237,.12),transparent 60%),
+  radial-gradient(600px 400px at 50% 100%,rgba(196,181,253,.08),transparent 60%);
+  pointer-events:none;z-index:0}
+:root[data-theme="light"] body::before{opacity:.6}
+.wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:24px 20px 100px}
+svg{display:block}
+.icon{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.icon-sm{width:14px;height:14px}
+.icon-lg{width:22px;height:22px}
+.icon-xl{width:28px;height:28px}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:28px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:52px;height:52px;border-radius:16px;background:var(--grad);display:flex;align-items:center;justify-content:center;box-shadow:var(--glow);position:relative;overflow:hidden;flex-shrink:0}
+.logo::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.3),transparent 50%);pointer-events:none}
+.logo svg{width:28px;height:28px;color:#fff;position:relative;z-index:1}
+.brand h1{font-family:'Sora',sans-serif;font-size:1.35rem;margin:0;font-weight:800;letter-spacing:-.02em;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.brand p{margin:3px 0 0;font-size:.78rem;color:var(--sub);font-weight:500}
+.keybar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pill{font-size:.75rem;padding:8px 14px;border-radius:99px;font-weight:700;border:1px solid var(--line2);display:flex;align-items:center;gap:7px;background:var(--panel);backdrop-filter:blur(12px);transition:.2s;cursor:default}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.pill.set{color:var(--ok);border-color:rgba(74,222,128,.3);background:var(--ok-bg)}
+.pill.multi{color:var(--accent);border-color:rgba(167,139,250,.3);background:var(--accent-soft)}
+.pill.unset{color:var(--warn);border-color:rgba(251,191,36,.3);background:var(--warn-bg)}
+.iconbtn{background:var(--panel);border:1px solid var(--line2);color:var(--ink);border-radius:12px;padding:10px 14px;cursor:pointer;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:7px;font-family:inherit;transition:.2s;backdrop-filter:blur(12px)}
+.iconbtn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow)}
+.iconbtn.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+
+.card{background:var(--panel);border:1px solid var(--line2);border-radius:20px;padding:22px;margin-bottom:20px;box-shadow:var(--shadow);backdrop-filter:blur(20px)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.card-title{font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;display:flex;align-items:center;gap:9px;letter-spacing:-.01em}
+.card-title .icon{color:var(--accent)}
+
+.drop{border:2px dashed var(--line3);border-radius:16px;padding:44px 20px;text-align:center;cursor:pointer;transition:.25s;background:var(--panel2);position:relative;overflow:hidden}
+.drop::before{content:'';position:absolute;inset:0;background:var(--grad-soft);opacity:0;transition:.3s;pointer-events:none}
+.drop:hover::before,.drop.drag::before{opacity:1}
+.drop:hover,.drop.drag{border-color:var(--accent);border-style:solid;transform:scale(1.005)}
+.drop .diconwrap{width:64px;height:64px;border-radius:20px;background:var(--grad);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:var(--glow);position:relative;z-index:1}
+.drop .diconwrap svg{width:30px;height:30px;color:#fff}
+.drop .dtitle{font-weight:800;font-size:1.05rem;font-family:'Sora',sans-serif;position:relative;z-index:1;letter-spacing:-.01em}
+.drop .dsub{font-size:.82rem;color:var(--sub);margin-top:6px;position:relative;z-index:1}
+.kindrow{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap;position:relative;z-index:1}
+.kindtag{font-size:.72rem;color:var(--sub);border:1px solid var(--line2);padding:5px 12px;border-radius:99px;display:flex;align-items:center;gap:6px;background:var(--panel);font-weight:600;transition:.2s}
+.kindtag .icon{width:13px;height:13px;color:var(--accent)}
+.drop .hint{margin-top:14px;font-size:.76rem;color:var(--muted);position:relative;z-index:1;font-weight:500}
+input[type=file]{display:none}
+
+.settingsgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:18px}
+.field label{display:block;font-size:.68rem;color:var(--sub);margin-bottom:7px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.field input[type=number],.field input[type=text],.field input[type=password],.field select{
+  width:100%;background:var(--panel2);border:1px solid var(--line2);border-radius:11px;color:var(--ink);
+  padding:11px 13px;font-size:.85rem;font-family:inherit;transition:.15s;font-weight:500}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.pwrow{position:relative}
+.pwrow button{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--sub);cursor:pointer;padding:6px;display:flex;transition:.15s}
+.pwrow button:hover{color:var(--accent)}
+
+.actionbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:18px}
+.btn{border:none;border-radius:12px;padding:12px 18px;font-size:.83rem;cursor:pointer;font-weight:700;font-family:inherit;transition:.2s;display:flex;align-items:center;gap:8px;position:relative;overflow:hidden;letter-spacing:-.01em}
+.btn-primary{background:var(--grad);color:#fff;box-shadow:0 6px 20px rgba(124,58,237,.35)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;filter:grayscale(.5)}
+.btn-primary:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(124,58,237,.5)}
+.btn-primary:not(:disabled):active{transform:translateY(0)}
+.btn-outline{background:var(--panel2);border:1px solid var(--line2);color:var(--ink)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.btn-outline:disabled{opacity:.4;cursor:not-allowed}
+.spacer{flex:1}
+.count{font-size:.78rem;color:var(--sub);font-weight:600;padding:6px 12px;background:var(--panel2);border-radius:99px;border:1px solid var(--line)}
+select#exportPlatform{background:var(--panel2);border:1px solid var(--line2);border-radius:11px;color:var(--ink);padding:11px 13px;font-size:.82rem;font-family:inherit;font-weight:600;cursor:pointer}
+select#exportPlatform:focus{outline:none;border-color:var(--accent)}
+
+.statsbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:16px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;transition:.2s}
+.stat:hover{border-color:var(--line3)}
+.stat .stat-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat .stat-icon .icon{width:16px;height:16px}
+.stat.total .stat-icon{background:var(--accent-soft);color:var(--accent)}
+.stat.done .stat-icon{background:var(--ok-bg);color:var(--ok)}
+.stat.pending .stat-icon{background:var(--warn-bg);color:var(--warn)}
+.stat.error .stat-icon{background:var(--err-bg);color:var(--err)}
+.stat .stat-info{flex:1;min-width:0}
+.stat .stat-value{font-size:1.15rem;font-weight:800;font-family:'Sora',sans-serif;line-height:1;letter-spacing:-.02em}
+.stat .stat-label{font-size:.66rem;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+
+.providers{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:14px}
+.prov{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;display:flex;align-items:center;gap:9px;transition:.2s;position:relative;overflow:hidden}
+.prov.active{border-color:var(--accent);background:var(--accent-soft)}
+.prov.cooling{border-color:rgba(251,191,36,.3);background:var(--warn-bg)}
+.prov.failed{border-color:rgba(248,113,113,.3);background:var(--err-bg)}
+.prov.disabled{opacity:.4}
+.prov .pdot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:.3s}
+.prov.active .pdot{background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 1.5s infinite}
+.prov.cooling .pdot{background:var(--warn)}
+.prov.failed .pdot{background:var(--err)}
+.prov .pname{font-size:.72rem;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prov .pcount{font-size:.66rem;color:var(--sub);font-weight:600}
+
+.progwrap{margin-top:18px;display:none}
+.progtop{display:flex;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--sub);margin-bottom:9px;font-weight:600}
+.progtop .proglabel{display:flex;align-items:center;gap:8px;color:var(--ink)}
+.progtop .proglabel .icon{width:14px;height:14px;color:var(--accent);animation:spin 1.5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.progbar{height:10px;background:var(--panel2);border-radius:99px;overflow:hidden;border:1px solid var(--line);position:relative}
+.progbar>div{height:100%;width:0%;background:var(--grad);transition:width .3s ease;position:relative;overflow:hidden;border-radius:99px}
+.progbar>div::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);animation:shimmer 1.5s infinite}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+
+.notice{font-size:.82rem;padding:12px 16px;border-radius:12px;margin-top:14px;display:none;font-weight:600;align-items:center;gap:9px;animation:slideIn .3s}
+@keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.notice .icon{flex-shrink:0}
+.notice.warn{background:var(--warn-bg);border:1px solid rgba(251,191,36,.25);color:var(--warn);display:flex}
+.notice.err{background:var(--err-bg);border:1px solid rgba(248,113,113,.25);color:var(--err);display:flex}
+.notice.ok{background:var(--ok-bg);border:1px solid rgba(74,222,128,.25);color:var(--ok);display:flex}
+
+.viewtoggle{display:flex;background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:3px;gap:2px}
+.viewtoggle button{background:transparent;border:none;color:var(--sub);padding:7px 10px;border-radius:7px;cursor:pointer;display:flex;align-items:center;transition:.15s}
+.viewtoggle button.active{background:var(--panel);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.viewtoggle button .icon{width:16px;height:16px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:18px}
+.grid.list{grid-template-columns:1fr;gap:10px}
+.item{background:var(--panel);border:1px solid var(--line2);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);transition:.2s;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.item:hover{border-color:var(--line3);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.item .thumbwrap{position:relative;aspect-ratio:4/3;background:var(--panel2);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.item img{width:100%;height:100%;object-fit:cover;display:block;transition:.3s}
+.item:hover img{transform:scale(1.03)}
+.item .audioicon{width:52px;height:52px;stroke:var(--muted);opacity:.5}
+.item .kindbadge{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);color:#fff;font-size:.66rem;font-weight:700;padding:5px 10px;border-radius:99px;display:flex;align-items:center;gap:5px;letter-spacing:.02em}
+.item .kindbadge .icon{width:12px;height:12px}
+.item .rm{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);color:#fff;border:none;border-radius:9px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;opacity:0}
+.item:hover .rm{opacity:1}
+.item .rm:hover{background:var(--err);transform:scale(1.1)}
+.item .rm .icon{width:14px;height:14px}
+.item .status-chip{position:absolute;bottom:10px;left:10px;font-size:.7rem;font-weight:800;padding:5px 11px;border-radius:99px;display:flex;align-items:center;gap:6px;backdrop-filter:blur(8px);letter-spacing:.01em}
+.status-chip .icon{width:12px;height:12px}
+.status-chip.pending{background:rgba(255,255,255,.9);color:#333}
+.status-chip.working{background:var(--accent);color:#fff}
+.status-chip.working .icon{animation:spin 1s linear infinite}
+.status-chip.done{background:var(--ok);color:#0d2416}
+.status-chip.error{background:var(--err);color:#fff}
+.item .body{padding:14px;display:flex;flex-direction:column;gap:10px;flex:1}
+.item .fname{font-size:.72rem;color:var(--muted);word-break:break-all;font-weight:600;line-height:1.4}
+.item .usedby{font-size:.66rem;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:4px;margin-top:-4px}
+.item .usedby .icon{width:11px;height:11px}
+.item textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:9px;color:var(--ink);
+  padding:9px 11px;font-size:.8rem;font-family:inherit;resize:vertical;transition:.15s;line-height:1.5}
+.item textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);background:var(--panel3)}
+.item textarea.title{min-height:44px;font-weight:600}
+.item textarea.kw{min-height:62px}
+.lblrow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fieldlbl{font-size:.66rem;color:var(--sub);font-weight:800;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+.fieldlbl .icon{width:12px;height:12px;color:var(--accent)}
+.copybtn{background:transparent;border:1px solid transparent;color:var(--muted);cursor:pointer;padding:3px 8px;border-radius:7px;display:flex;align-items:center;gap:5px;font-size:.68rem;font-weight:700;font-family:inherit;transition:.15s}
+.copybtn:hover{color:var(--accent);background:var(--accent-soft)}
+.copybtn .icon{width:12px;height:12px}
+.copybtn.copied{color:var(--ok);background:var(--ok-bg);border-color:rgba(74,222,128,.2)}
+.errmsg{font-size:.74rem;color:var(--err);font-weight:600;padding:9px 11px;background:var(--err-bg);border-radius:9px;border:1px solid rgba(248,113,113,.2);line-height:1.5;display:flex;gap:7px;align-items:flex-start}
+.errmsg .icon{width:14px;height:14px;flex-shrink:0;margin-top:1px}
+
+.grid.list .item{flex-direction:row}
+.grid.list .thumbwrap{width:120px;aspect-ratio:1;flex-shrink:0;border-radius:0}
+.grid.list .item .body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:start}
+.grid.list .fname{grid-column:1/-1;margin-bottom:0}
+.grid.list .usedby{grid-column:1/-1}
+.grid.list .errmsg{grid-column:1/-1}
+.grid.list .fieldgroup{display:flex;flex-direction:column;gap:6px}
+
+.empty{text-align:center;color:var(--muted);font-size:.9rem;padding:60px 20px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.empty .emptyicon{width:80px;height:80px;border-radius:24px;background:var(--grad-soft);display:flex;align-items:center;justify-content:center;border:1px solid var(--line2)}
+.empty .emptyicon .icon{width:36px;height:36px;color:var(--accent);opacity:.7}
+.empty .emptytext{font-weight:600;color:var(--sub)}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;animation:fadeIn .2s;overflow-y:auto}
+.modal-bg.show{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line2);border-radius:20px;padding:26px;max-width:520px;width:100%;box-shadow:var(--shadow-lg);animation:modalIn .3s;margin:auto}
+@keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal h3{margin:0 0 6px;font-size:1.15rem;font-family:'Sora',sans-serif;font-weight:800;display:flex;align-items:center;gap:10px;letter-spacing:-.01em}
+.modal h3 .icon{color:var(--accent)}
+.modal>p{margin:0 0 18px;font-size:.83rem;color:var(--sub);line-height:1.6}
+.modal .row{display:flex;gap:10px;margin-top:16px}
+.modal a{color:var(--accent);font-weight:700;text-decoration:none;word-break:break-all}
+.modal a:hover{text-decoration:underline}
+
+.prov-row{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;transition:.2s}
+.prov-row:hover{border-color:var(--line3)}
+.prov-row.connected{border-color:rgba(74,222,128,.3);background:var(--ok-bg)}
+.prov-row-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.prov-row-head .picon{width:28px;height:28px;border-radius:8px;background:var(--grad);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.prov-row-head .picon .icon{width:14px;height:14px;color:#fff}
+.prov-row-head .pinfo{flex:1;min-width:0}
+.prov-row-head .pname{font-size:.82rem;font-weight:700}
+.prov-row-head .pdesc{font-size:.68rem;color:var(--sub);font-weight:500}
+.prov-row-head .ptoggle{background:none;border:none;color:var(--sub);cursor:pointer;padding:4px;display:flex;transition:.2s;flex-shrink:0}
+.prov-row-head .ptoggle.on{color:var(--ok)}
+.prov-row-head .ptoggle:hover{color:var(--accent)}
+.prov-row .pwrow{margin-top:0}
+.prov-row .field{margin-top:8px}
+.prov-row .field label{font-size:.62rem;margin-bottom:5px}
+.prov-row .field input{padding:9px 11px;font-size:.8rem}
+.priority-row{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;margin-bottom:6px;cursor:grab;transition:.15s}
+.priority-row:active{cursor:grabbing}
+.priority-row.dragover{border-color:var(--accent);background:var(--accent-soft)}
+.priority-row .pnum{width:22px;height:22px;border-radius:50%;background:var(--grad);color:#fff;font-size:.7rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.priority-row .pname{flex:1;font-size:.8rem;font-weight:700}
+.priority-row .pmove{display:flex;gap:2px;flex-shrink:0}
+.priority-row .pmove button{background:var(--panel);border:1px solid var(--line2);color:var(--sub);width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.priority-row .pmove button:hover{color:var(--accent);border-color:var(--accent)}
+.priority-row .pmove button:disabled{opacity:.3;cursor:not-allowed}
+.priority-row .pmove .icon{width:14px;height:14px}
+.priority-row .phandle{color:var(--muted);display:flex;flex-shrink:0}
+.priority-row .phandle .icon{width:16px;height:16px}
+
+.strategy{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.strategy button{background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:10px 12px;color:var(--ink);cursor:pointer;font-family:inherit;text-align:left;transition:.15s}
+.strategy button:hover{border-color:var(--accent)}
+.strategy button.active{border-color:var(--accent);background:var(--accent-soft)}
+.strategy button .stitle{font-size:.78rem;font-weight:700;display:flex;align-items:center;gap:6px}
+.strategy button .sdesc{font-size:.66rem;color:var(--sub);margin-top:3px;font-weight:500;line-height:1.4}
+.strategy button .stitle .icon{width:13px;height:13px;color:var(--accent)}
+
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:100;display:flex;flex-direction:column;gap:10px;pointer-events:none;max-width:380px}
+.toast{background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:14px 18px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:12px;animation:toastIn .3s;pointer-events:auto;backdrop-filter:blur(20px);min-width:260px}
+@keyframes toastIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+.toast.out{animation:toastOut .3s forwards}
+@keyframes toastOut{to{opacity:0;transform:translateX(30px)}}
+.toast .ticon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.toast.ok .ticon{background:var(--ok-bg);color:var(--ok)}
+.toast.err .ticon{background:var(--err-bg);color:var(--err)}
+.toast.info .ticon{background:var(--accent-soft);color:var(--accent)}
+.toast .tmsg{font-size:.83rem;font-weight:600;color:var(--ink);line-height:1.4}
+
+.fab-bar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:40;background:var(--panel);border:1px solid var(--line2);border-radius:16px;padding:8px;box-shadow:var(--shadow-lg);display:none;gap:6px;backdrop-filter:blur(20px);align-items:center}
+.fab-bar.show{display:flex}
+.fab-bar button{background:transparent;border:none;color:var(--sub);padding:10px 14px;border-radius:10px;cursor:pointer;font-family:inherit;font-size:.8rem;font-weight:700;display:flex;align-items:center;gap:7px;transition:.15s}
+.fab-bar button:hover{background:var(--accent-soft);color:var(--accent)}
+.fab-bar button.primary{background:var(--grad);color:#fff}
+.fab-bar button.primary:hover{transform:translateY(-1px)}
+
+@media (max-width:768px){
+  .wrap{padding:16px 14px 120px}
+  .brand h1{font-size:1.1rem}
+  .brand p{font-size:.72rem}
+  .logo{width:44px;height:44px;border-radius:13px}
+  .logo svg{width:24px;height:24px}
+  .top{gap:10px;margin-bottom:20px}
+  .iconbtn{padding:9px 12px;font-size:.75rem}
+  .iconbtn span{display:none}
+  .card{padding:16px;border-radius:16px}
+  .drop{padding:32px 16px}
+  .drop .diconwrap{width:56px;height:56px}
+  .drop .diconwrap svg{width:26px;height:26px}
+  .drop .dtitle{font-size:.95rem}
+  .actionbar{gap:8px}
+  select#exportPlatform{flex:1 1 100%}
+  .btn{flex:1;justify-content:center}
+  .btn.btn-primary{flex:1 1 100%}
+  .settingsgrid{grid-template-columns:1fr 1fr}
+  .grid{grid-template-columns:1fr;gap:12px}
+  .grid.list .item{flex-direction:column}
+  .grid.list .thumbwrap{width:100%;aspect-ratio:4/3}
+  .grid.list .item .body{display:flex;flex-direction:column}
+  .statsbar{grid-template-columns:1fr 1fr}
+  .providers{grid-template-columns:1fr 1fr}
+  .fab-bar{bottom:14px}
+  .toast-wrap{bottom:80px;right:14px;left:14px;max-width:none}
+  .strategy{grid-template-columns:1fr}
+}
+@media (max-width:400px){
+  .settingsgrid{grid-template-columns:1fr}
+  .stat .stat-value{font-size:1rem}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2l2.4 7.2h7.6l-6.2 4.5 2.4 7.3-6.2-4.5-6.2 4.5 2.4-7.3-6.2-4.5h7.6z"/>
+        </svg>
+      </div>
+      <div>
+        <h1>StockTagger Pro</h1>
+        <p>Multi-provider AI metadata with auto-fallback</p>
+      </div>
+    </div>
+    <div class="keybar">
+      <div class="pill unset" id="keyStatus"><span class="dot"></span><span id="keyStatusText">No API Key</span></div>
+      <button class="iconbtn" id="themeBtn" title="Toggle theme">
+        <svg class="icon" id="themeIcon" viewBox="0 0 24 24"></svg>
+        <span>Theme</span>
+      </button>
+      <button class="iconbtn" id="settingsBtn">
+        <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1.04 1.56V21a2 2 0 01-4 0v-.09A1.7 1.7 0 008.9 19.4a1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.7 1.7 0 00.34-1.87 1.7 1.7 0 00-1.56-1.04H3a2 2 0 010-4h.09A1.7 1.7 0 004.6 8.9a1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06a1.7 1.7 0 001.87.34H9a1.7 1.7 0 001.04-1.56V3a2 2 0 014 0v.09a1.7 1.7 0 001.04 1.56 1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06a1.7 1.7 0 00-.34 1.87V9a1.7 1.7 0 001.56 1.04H21a2 2 0 010 4h-.09a1.7 1.7 0 00-1.56 1.04z"/></svg>
+        <span>Settings</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="drop" id="drop">
+      <div class="diconwrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <div class="dtitle">Drop files here or click to upload</div>
+      <div class="dsub">Bulk upload supported — process hundreds of files at once</div>
+      <div class="kindrow">
+        <span class="kindtag"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.8"/><path d="M21 15l-4.5-4.5a2 2 0 00-2.8 0L6 18"/></svg>Image</span>
+        <span class="kindtag"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 9l4-2v10l-4-2"/></svg>Video</span>
+        <span class="kindtag"><svg class="icon" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>Audio</span>
+      </div>
+      <div class="hint">🔄 Auto-fallback across all 4 providers when one fails</div>
+    </div>
+    <input type="file" id="fileInput" accept="image/*,video/*,audio/*" multiple>
+
+    <div class="settingsgrid">
+      <div class="field"><label>Keyword Count</label><input type="number" id="kwCount" value="40" min="10" max="49"></div>
+      <div class="field"><label>Title Max Chars</label><input type="number" id="titleLen" value="120" min="30" max="200"></div>
+      <div class="field"><label>Description Max Chars</label><input type="number" id="descLen" value="200" min="50" max="500"></div>
+    </div>
+
+    <div class="actionbar">
+      <button class="btn btn-primary" id="genAllBtn" disabled>
+        <svg class="icon" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Generate All
+      </button>
+      <select id="exportPlatform">
+        <option value="adobestock">Adobe Stock (CSV)</option>
+        <option value="shutterstock">Shutterstock (CSV)</option>
+        <option value="freepik">Freepik / POD (CSV)</option>
+        <option value="istock">iStock / Getty (CSV)</option>
+        <option value="pond5">Pond5 (CSV)</option>
+        <option value="facebook">Facebook (TXT)</option>
+        <option value="youtube">YouTube (TXT)</option>
+      </select>
+      <button class="btn btn-outline" id="exportBtn" disabled>
+        <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+      <button class="btn btn-outline" id="clearBtn" disabled>
+        <svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+        Clear
+      </button>
+      <div class="spacer"></div>
+      <div class="count" id="fileCount">0 files</div>
+    </div>
+
+    <div class="statsbar" id="statsBar" style="display:none">
+      <div class="stat total"><div class="stat-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg></div><div class="stat-info"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total</div></div></div>
+      <div class="stat done"><div class="stat-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="stat-info"><div class="stat-value" id="statDone">0</div><div class="stat-label">Done</div></div></div>
+      <div class="stat pending"><div class="stat-icon"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="stat-info"><div class="stat-value" id="statPending">0</div><div class="stat-label">Pending</div></div></div>
+      <div class="stat error"><div class="stat-icon"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="stat-info"><div class="stat-value" id="statError">0</div><div class="stat-label">Errors</div></div></div>
+    </div>
+
+    <div class="providers" id="providersBar" style="display:none">
+      <div class="prov" data-prov="google"><span class="pdot"></span><span class="pname">Gemini</span><span class="pcount" id="pc-google">0</span></div>
+      <div class="prov" data-prov="anthropic"><span class="pdot"></span><span class="pname">Claude</span><span class="pcount" id="pc-anthropic">0</span></div>
+      <div class="prov" data-prov="openai"><span class="pdot"></span><span class="pname">OpenAI</span><span class="pcount" id="pc-openai">0</span></div>
+      <div class="prov" data-prov="groq"><span class="pdot"></span><span class="pname">Groq</span><span class="pcount" id="pc-groq">0</span></div>
+    </div>
+
+    <div class="progwrap" id="progWrap">
+      <div class="progtop">
+        <div class="proglabel"><svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg><span id="progLabel">Processing…</span></div>
+        <span id="progPct">0%</span>
+      </div>
+      <div class="progbar"><div id="progFill"></div></div>
+    </div>
+    <div class="notice" id="notice"></div>
+  </div>
+
+  <div class="card-head" id="resultsHead" style="display:none;margin-bottom:0">
+    <div class="card-title"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Results</div>
+    <div class="viewtoggle">
+      <button id="viewGrid" class="active" title="Grid view"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+      <button id="viewList" title="List view"><svg class="icon" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="empty" id="emptyMsg">
+    <div class="emptyicon"><svg class="icon" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><polyline points="13 2 13 9 20 9"/></svg></div>
+    <div class="emptytext">No files uploaded yet</div>
+    <div style="font-size:.78rem;color:var(--muted)">Upload images, videos or audio to get started</div>
+  </div>
+</div>
+
+<div class="fab-bar" id="fabBar">
+  <button class="primary" id="fabGen"><svg class="icon" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Generate</button>
+  <button id="fabExport"><svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export</button>
+  <button id="fabClear"><svg class="icon" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>Clear</button>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h3><svg class="icon icon-lg" viewBox="0 0 24 24"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0L19 4m-3.5 3.5L19 11"/></svg>API Providers & Auto-Fallback</h3>
+    <p>Add keys for as many providers as you like. When one fails (rate limit, quota, model missing), the app automatically tries the next one in your priority order.</p>
+
+    <div style="margin-bottom:16px">
+      <label style="display:block;font-size:.68rem;color:var(--sub);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Fallback Strategy</label>
+      <div class="strategy" id="strategyGroup">
+        <button data-strategy="priority" class="active">
+          <div class="stitle"><svg class="icon" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Priority Order</div>
+          <div class="sdesc">Always try providers in your chosen order</div>
+        </button>
+        <button data-strategy="balanced">
+          <div class="stitle"><svg class="icon" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/></svg>Balanced</div>
+          <div class="sdesc">Distribute load across all working providers</div>
+        </button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:.68rem;color:var(--sub);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Priority Order (drag on desktop, arrows on mobile)</label>
+      <div id="priorityList"></div>
+    </div>
+
+    <div id="provRows"></div>
+
+    <div class="row">
+      <button class="btn btn-primary" id="saveKeyBtn" style="flex:1;justify-content:center">Save All</button>
+      <button class="btn btn-outline" id="closeModalBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+let items = [];
+let uid = 0;
+let theme = localStorage.getItem('stocktagger_theme') || 'dark';
+let viewMode = localStorage.getItem('stocktagger_view') || 'grid';
+
+let apiKeys = JSON.parse(localStorage.getItem('stocktagger_keys') || '{}');
+let enabled = JSON.parse(localStorage.getItem('stocktagger_enabled') || 'null') || { google:true, anthropic:true, openai:true, groq:true };
+let priority = JSON.parse(localStorage.getItem('stocktagger_priority') || 'null') || ['google','anthropic','openai','groq'];
+let strategy = localStorage.getItem('stocktagger_strategy') || 'priority';
+
+const provHealth = {
+  google:   { fails:0, cooldownUntil:0, successes:0, total:0 },
+  anthropic:{ fails:0, cooldownUntil:0, successes:0, total:0 },
+  openai:   { fails:0, cooldownUntil:0, successes:0, total:0 },
+  groq:     { fails:0, cooldownUntil:0, successes:0, total:0 }
+};
+let balancedIdx = 0;
+
+/* ============================================================
+   ICONS
+   ============================================================ */
+const ICON_SUN = '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8L6 18M18 6l1.8-1.8"/>';
+const ICON_MOON = '<path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/>';
+const ICON_RM = '<svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+const ICON_DONE = '<svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+const ICON_ERR = '<svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>';
+const ICON_SPIN = '<svg class="icon" viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>';
+const ICON_COPY = '<svg class="icon" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 01-1-1V4a1 1 0 011-1h10a1 1 0 011 1v1"/></svg>';
+const ICON_CHECK = '<svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+const ICON_AUDIO = '<svg class="audioicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+const ICON_VIDBADGE = '<svg class="icon" viewBox="0 0 24 24"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="M17 9l4-2v10l-4-2"/></svg>';
+const ICON_AUDBADGE = '<svg class="icon" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>';
+const ICON_TITLE = '<svg class="icon" viewBox="0 0 24 24"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>';
+const ICON_DESC = '<svg class="icon" viewBox="0 0 24 24"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>';
+const ICON_KEY = '<svg class="icon" viewBox="0 0 24 24"><path d="M9.5 10.5L21 2M15 8l3 3M6.5 14a4.5 4.5 0 100 9 4.5 4.5 0 000-9z"/></svg>';
+const ICON_UP = '<svg class="icon" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>';
+const ICON_DOWN = '<svg class="icon" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>';
+const ICON_EYE = '<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+const ICON_EYE_OFF = '<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+const ICON_BOLT = '<svg class="icon" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>';
+
+const PROVIDERS = {
+  google:    { name:'Google Gemini', desc:'Gemini 3 — vision + audio', keyLink:'https://aistudio.google.com/apikey', short:'Gemini' },
+  anthropic: { name:'Anthropic Claude', desc:'Claude — vision (no audio)', keyLink:'https://console.anthropic.com/settings/keys', short:'Claude' },
+  openai:    { name:'OpenAI GPT-4o', desc:'GPT-4o — vision + audio (wav/mp3)', keyLink:'https://platform.openai.com/api-keys', short:'OpenAI' },
+  groq:      { name:'Groq', desc:'Fast vision inference, generous free tier', keyLink:'https://console.groq.com/keys', short:'Groq' }
+};
+
+const $ = id => document.getElementById(id);
+const fileInput = $('fileInput'), drop = $('drop'), genAllBtn = $('genAllBtn'),
+  exportBtn = $('exportBtn'), exportPlatform = $('exportPlatform'), clearBtn = $('clearBtn'),
+  grid = $('grid'), emptyMsg = $('emptyMsg'), fileCount = $('fileCount'), notice = $('notice'),
+  progWrap = $('progWrap'), progFill = $('progFill'), progPct = $('progPct'), progLabel = $('progLabel'),
+  modalBg = $('modalBg'), keyStatus = $('keyStatus'), keyStatusText = $('keyStatusText');
+
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', theme);
+  $('themeIcon').innerHTML = theme === 'light' ? ICON_SUN : ICON_MOON;
+}
+applyTheme();
+$('themeBtn').onclick = () => {
+  theme = theme === 'light' ? 'dark' : 'light';
+  localStorage.setItem('stocktagger_theme', theme);
+  applyTheme();
+};
+
+function showNotice(msg, type){ notice.innerHTML = (type==='ok'?ICON_DONE:type==='err'?ICON_ERR:ICON_SPIN) + '<span>' + msg + '</span>'; notice.className = 'notice ' + type; }
+function clearNotice(){ notice.className = 'notice'; notice.innerHTML=''; }
+
+function toast(msg, type='info'){
+  const wrap = $('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  const icons = { ok: ICON_DONE, err: ICON_ERR, info: ICON_SPIN };
+  el.innerHTML = `<div class="ticon">${icons[type]||icons.info}</div><div class="tmsg">${msg}</div>`;
+  wrap.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(()=>el.remove(), 300); }, 3500);
+}
+
+function refreshKeyStatus(){
+  const activeKeys = Object.entries(apiKeys).filter(([p,k]) => k && enabled[p]);
+  if (activeKeys.length === 0){
+    keyStatus.classList.remove('set','multi'); keyStatus.classList.add('unset');
+    keyStatusText.textContent = 'No API Key';
+  } else if (activeKeys.length === 1){
+    keyStatus.classList.remove('unset','multi'); keyStatus.classList.add('set');
+    keyStatusText.textContent = PROVIDERS[activeKeys[0][0]].short + ' ✓';
+  } else {
+    keyStatus.classList.remove('unset','set'); keyStatus.classList.add('multi');
+    keyStatusText.textContent = activeKeys.length + ' providers ✓';
+  }
+  updateButtons();
+}
+
+function applyView(){
+  grid.classList.toggle('list', viewMode === 'list');
+  $('viewGrid').classList.toggle('active', viewMode === 'grid');
+  $('viewList').classList.toggle('active', viewMode === 'list');
+}
+$('viewGrid').onclick = () => { viewMode='grid'; localStorage.setItem('stocktagger_view','grid'); applyView(); };
+$('viewList').onclick = () => { viewMode='list'; localStorage.setItem('stocktagger_view','list'); applyView(); };
+
+function renderModal(){
+  document.querySelectorAll('#strategyGroup button').forEach(b => {
+    b.classList.toggle('active', b.dataset.strategy === strategy);
+  });
+
+  const pl = $('priorityList');
+  pl.innerHTML = '';
+  priority.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'priority-row';
+    row.draggable = true;
+    row.dataset.prov = p;
+    row.dataset.idx = i;
+    row.innerHTML = `<span class="pnum">${i+1}</span><span class="pname">${PROVIDERS[p].name}</span>
+      <span class="pmove">
+        <button type="button" data-move="up" data-idx="${i}" ${i===0?'disabled':''}>${ICON_UP}</button>
+        <button type="button" data-move="down" data-idx="${i}" ${i===priority.length-1?'disabled':''}>${ICON_DOWN}</button>
+      </span>`;
+    pl.appendChild(row);
+  });
+
+  /* Desktop drag-to-reorder (has no effect on touch devices, so explicit
+     up/down buttons above are the primary, mobile-friendly way to reorder) */
+  let dragSrc = null;
+  pl.querySelectorAll('.priority-row').forEach(row => {
+    row.addEventListener('dragstart', e => { dragSrc = row; row.style.opacity = '.4'; });
+    row.addEventListener('dragend', () => { row.style.opacity = '1'; pl.querySelectorAll('.priority-row').forEach(r=>r.classList.remove('dragover')); });
+    row.addEventListener('dragover', e => { e.preventDefault(); row.classList.add('dragover'); });
+    row.addEventListener('dragleave', () => row.classList.remove('dragover'));
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      row.classList.remove('dragover');
+      if (!dragSrc || dragSrc === row) return;
+      const from = +dragSrc.dataset.idx, to = +row.dataset.idx;
+      const moved = priority.splice(from, 1)[0];
+      priority.splice(to, 0, moved);
+      renderModal();
+    });
+  });
+
+  pl.querySelectorAll('[data-move]').forEach(btn => {
+    btn.onclick = () => {
+      const idx = +btn.dataset.idx;
+      const dir = btn.dataset.move === 'up' ? -1 : 1;
+      const swapWith = idx + dir;
+      if (swapWith < 0 || swapWith >= priority.length) return;
+      [priority[idx], priority[swapWith]] = [priority[swapWith], priority[idx]];
+      renderModal();
+    };
+  });
+
+  const pr = $('provRows');
+  pr.innerHTML = '';
+  Object.entries(PROVIDERS).forEach(([key, info]) => {
+    const hasKey = !!apiKeys[key];
+    const row = document.createElement('div');
+    row.className = 'prov-row' + (hasKey ? ' connected' : '');
+    row.innerHTML = `
+      <div class="prov-row-head">
+        <div class="picon">${ICON_KEY}</div>
+        <div class="pinfo">
+          <div class="pname">${info.name}</div>
+          <div class="pdesc">${info.desc}</div>
+        </div>
+        <button class="ptoggle ${enabled[key]?'on':''}" data-toggle="${key}" title="Enable/disable">
+          ${enabled[key] ? ICON_CHECK : ICON_EYE_OFF}
+        </button>
+      </div>
+      <div class="field">
+        <label>API Key</label>
+        <div class="pwrow">
+          <input type="password" data-key="${key}" value="${hasKey ? apiKeys[key] : ''}" placeholder="Paste ${info.short} API key">
+          <button type="button" data-togglepw="${key}">${ICON_EYE}</button>
+        </div>
+      </div>
+      <p style="margin:6px 0 0;font-size:.68rem;color:var(--sub)">
+        <a href="${info.keyLink}" target="_blank">Get ${info.short} key →</a>
+      </p>`;
+    pr.appendChild(row);
+  });
+
+  pr.querySelectorAll('[data-togglepw]').forEach(btn => {
+    btn.onclick = () => {
+      const inp = pr.querySelector(`[data-key="${btn.dataset.togglepw}"]`);
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    };
+  });
+
+  pr.querySelectorAll('[data-toggle]').forEach(btn => {
+    btn.onclick = () => {
+      const k = btn.dataset.toggle;
+      enabled[k] = !enabled[k];
+      renderModal();
+    };
+  });
+
+  pr.querySelectorAll('[data-key]').forEach(inp => {
+    inp.oninput = () => {
+      const k = inp.dataset.key;
+      apiKeys[k] = inp.value.trim();
+    };
+  });
+}
+
+document.querySelectorAll('#strategyGroup button').forEach(b => {
+  b.onclick = () => {
+    strategy = b.dataset.strategy;
+    document.querySelectorAll('#strategyGroup button').forEach(x => x.classList.toggle('active', x === b));
+  };
+});
+
+$('settingsBtn').onclick = () => { renderModal(); modalBg.classList.add('show'); };
+$('closeModalBtn').onclick = () => modalBg.classList.remove('show');
+modalBg.onclick = e => { if (e.target === modalBg) modalBg.classList.remove('show'); };
+
+$('saveKeyBtn').onclick = () => {
+  localStorage.setItem('stocktagger_keys', JSON.stringify(apiKeys));
+  localStorage.setItem('stocktagger_enabled', JSON.stringify(enabled));
+  localStorage.setItem('stocktagger_priority', JSON.stringify(priority));
+  localStorage.setItem('stocktagger_strategy', strategy);
+  modalBg.classList.remove('show');
+  refreshKeyStatus();
+  clearNotice();
+  const count = Object.entries(apiKeys).filter(([p,k])=>k&&enabled[p]).length;
+  toast(`${count} provider${count!==1?'s':''} configured`, 'ok');
+};
+
+/* ============================================================
+   FILE HANDLING
+   ============================================================ */
+drop.onclick = () => fileInput.click();
+fileInput.onchange = e => { addFiles(e.target.files); fileInput.value=''; };
+['dragover','dragenter'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+drop.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+
+function kindOf(file){
+  if (file.type.startsWith('image/')) return 'image';
+  if (file.type.startsWith('video/')) return 'video';
+  if (file.type.startsWith('audio/')) return 'audio';
+  return 'image';
+}
+
+function withTimeout(promise, ms, msg){
+  return Promise.race([promise, new Promise((_, rej) => setTimeout(() => rej(new Error(msg || 'Timed out')), ms))]);
+}
+
+const frameCache = new WeakMap();
+function extractVideoFrame(file){
+  if (frameCache.has(file)) return frameCache.get(file);
+  const p = withTimeout(new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    video.preload = 'auto'; video.muted = true; video.playsInline = true; video.setAttribute('playsinline','');
+    video.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;';
+    document.body.appendChild(video);
+    const url = URL.createObjectURL(file);
+    const cleanup = () => { URL.revokeObjectURL(url); video.remove(); };
+    video.onloadedmetadata = () => {
+      try { video.currentTime = Math.min(1, (video.duration || 2) / 4); }
+      catch(e){ cleanup(); reject(e); }
+    };
+    video.onseeked = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.min(640, video.videoWidth || 320);
+        canvas.height = Math.min(480, video.videoHeight || 240);
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        resolve({ dataUrl, base64: dataUrl.split(',')[1], mediaType: 'image/jpeg', duration: video.duration });
+      } catch(e){ reject(e); }
+      cleanup();
+    };
+    video.onerror = () => { cleanup(); reject(new Error('Video frame extraction failed')); };
+    video.src = url;
+    video.load();
+  }), 20000, 'Video frame extraction timed out');
+  frameCache.set(file, p);
+  return p;
+}
+
+function getAudioDuration(file){
+  return withTimeout(new Promise((resolve, reject) => {
+    const a = document.createElement('audio');
+    a.preload = 'metadata';
+    a.style.cssText = 'position:fixed;left:-9999px;top:0;width:1px;height:1px;';
+    document.body.appendChild(a);
+    const url = URL.createObjectURL(file);
+    const cleanup = () => { URL.revokeObjectURL(url); a.remove(); };
+    a.onloadedmetadata = () => { const d = a.duration; cleanup(); resolve(d); };
+    a.onerror = () => { cleanup(); reject(new Error('Could not read audio metadata')); };
+    a.src = url;
+  }), 10000, 'Audio metadata read timed out').catch(() => null);
+}
+
+function svgToPng(file){
+  return withTimeout(new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const w = Math.min(1024, img.naturalWidth || 512), h = Math.min(1024, img.naturalHeight || 512);
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/png');
+        resolve({ base64: dataUrl.split(',')[1], mediaType: 'image/png' });
+      } catch(e){ reject(e); }
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('SVG render failed')); };
+    img.src = url;
+  }), 10000, 'SVG conversion timed out');
+}
+
+const b64Cache = new WeakMap();
+function fileToBase64(file){
+  if (b64Cache.has(file)) return b64Cache.get(file);
+  const p = new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = () => rej(r.error);
+    r.readAsDataURL(file);
+  });
+  b64Cache.set(file, p);
+  return p;
+}
+
+function addFiles(fileList){
+  const arr = Array.from(fileList).filter(f => /^(image|video|audio)\//.test(f.type));
+  if (!arr.length){ toast('No valid media files detected', 'err'); return; }
+  let added = 0;
+  for (const f of arr){
+    const kind = kindOf(f);
+    const item = {
+      id: uid++, file: f, kind,
+      url: kind === 'image' ? URL.createObjectURL(f) : null,
+      frameBase64:null, frameType:null, duration:null,
+      title:'', description:'', keywords:'', status:'pending', error:'', usedProvider:''
+    };
+    items.push(item);
+    added++;
+    if (kind === 'video'){
+      extractVideoFrame(f).then(r => { item.url = r.dataUrl; item.frameBase64 = r.base64; item.frameType = r.mediaType; item.duration = r.duration; scheduleRender(); })
+        .catch(e => { item.status = 'error'; item.error = e.message || 'Video frame extraction failed'; scheduleRender(); });
+    } else if (kind === 'audio'){
+      getAudioDuration(f).then(d => { item.duration = d; scheduleRender(); });
+    } else if (kind === 'image' && f.type === 'image/svg+xml'){
+      svgToPng(f).then(r => { item.frameBase64 = r.base64; item.frameType = r.mediaType; scheduleRender(); })
+        .catch(e => { item.status = 'error'; item.error = e.message || 'SVG conversion failed'; scheduleRender(); });
+    }
+  }
+  toast(`Added ${added} file${added>1?'s':''}`, 'ok');
+  scheduleRender();
+}
+
+let renderScheduled = false;
+function scheduleRender(){
+  if (renderScheduled) return;
+  renderScheduled = true;
+  requestAnimationFrame(() => { renderScheduled = false; render(); });
+}
+
+function render(){
+  const has = items.length > 0;
+  emptyMsg.style.display = has ? 'none' : 'flex';
+  $('resultsHead').style.display = has ? 'flex' : 'none';
+  fileCount.textContent = has ? items.length + (items.length===1?' file':' files') : '0 files';
+
+  if (has){
+    $('statsBar').style.display = 'grid';
+    $('statTotal').textContent = items.length;
+    $('statDone').textContent = items.filter(i=>i.status==='done').length;
+    $('statPending').textContent = items.filter(i=>i.status==='pending'||i.status==='working').length;
+    $('statError').textContent = items.filter(i=>i.status==='error').length;
+    $('providersBar').style.display = 'grid';
+    updateProviderBar();
+  } else {
+    $('statsBar').style.display = 'none';
+    $('providersBar').style.display = 'none';
+  }
+
+  grid.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  for (const it of items) frag.appendChild(renderItem(it));
+  grid.appendChild(frag);
+
+  updateButtons();
+  $('fabBar').classList.toggle('show', has);
+}
+
+function updateProviderBar(){
+  Object.keys(PROVIDERS).forEach(p => {
+    const el = document.querySelector(`.prov[data-prov="${p}"]`);
+    const cnt = $(`pc-${p}`);
+    if (!el || !cnt) return;
+    el.classList.remove('active','cooling','failed','disabled');
+    const h = provHealth[p];
+    const now = Date.now();
+    if (!apiKeys[p] || !enabled[p]){
+      cnt.textContent = '—';
+      el.classList.add('disabled');
+    } else {
+      cnt.textContent = h.successes + '/' + h.fails;
+      if (now < h.cooldownUntil) el.classList.add('cooling');
+      else if (h.fails >= 3 && h.successes === 0) el.classList.add('failed');
+      else if (h.successes > 0) el.classList.add('active');
+    }
+  });
+}
+
+function renderItem(it){
+  const div = document.createElement('div');
+  div.className = 'item';
+  const thumb = it.kind === 'audio'
+    ? ICON_AUDIO
+    : (it.url ? `<img src="${it.url}" loading="lazy">` : `<div style="font-size:.72rem;color:var(--sub);display:flex;flex-direction:column;align-items:center;gap:6px">${ICON_SPIN}<span>Loading…</span></div>`);
+  const kindBadge = it.kind === 'video' ? `<span class="kindbadge">${ICON_VIDBADGE}Video</span>`
+    : it.kind === 'audio' ? `<span class="kindbadge">${ICON_AUDBADGE}Audio</span>` : '';
+  const chip = chipIcon(it);
+  const usedBy = it.usedProvider ? `<div class="usedby">${ICON_BOLT}<span>via ${PROVIDERS[it.usedProvider].short}</span></div>` : '';
+  div.innerHTML = `
+    <div class="thumbwrap">
+      ${thumb}
+      ${kindBadge}
+      <button class="rm" data-rm="${it.id}" title="Remove">${ICON_RM}</button>
+      <span class="status-chip ${it.status}">${chip}${chipLabel(it)}</span>
+    </div>
+    <div class="body">
+      <div class="fname">${escapeHtml(it.file.name)}</div>
+      ${usedBy}
+      ${it.status==='error' ? `<div class="errmsg">${ICON_ERR}<span>${escapeHtml(it.error)}</span></div>` : ''}
+      <div class="fieldgroup">
+        <div class="lblrow"><span class="fieldlbl">${ICON_TITLE}Title</span><button class="copybtn" data-copy="title" data-id="${it.id}">${ICON_COPY}Copy</button></div>
+        <textarea class="title" data-id="${it.id}" data-field="title" placeholder="Title will appear here…">${escapeHtml(it.title)}</textarea>
+      </div>
+      <div class="fieldgroup">
+        <div class="lblrow"><span class="fieldlbl">${ICON_DESC}Description</span><button class="copybtn" data-copy="description" data-id="${it.id}">${ICON_COPY}Copy</button></div>
+        <textarea class="kw" data-id="${it.id}" data-field="description" placeholder="Description…">${escapeHtml(it.description)}</textarea>
+      </div>
+      <div class="fieldgroup">
+        <div class="lblrow"><span class="fieldlbl">${ICON_KEY}Keywords</span><button class="copybtn" data-copy="keywords" data-id="${it.id}">${ICON_COPY}Copy</button></div>
+        <textarea class="kw" data-id="${it.id}" data-field="keywords" placeholder="keywords, separated, by, commas">${escapeHtml(it.keywords)}</textarea>
+      </div>
+    </div>`;
+  return div;
+}
+
+function chipIcon(it){
+  if (it.status==='done') return ICON_DONE;
+  if (it.status==='error') return ICON_ERR;
+  if (it.status==='working') return ICON_SPIN;
+  return '';
+}
+function chipLabel(it){ return {pending:'Pending', working:'Working…', done:'Done', error:'Error'}[it.status] || it.status; }
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+grid.addEventListener('input', e => {
+  const t = e.target;
+  if (t.tagName === 'TEXTAREA'){
+    const it = items.find(x=>x.id==t.dataset.id);
+    if (it) it[t.dataset.field] = t.value;
+  }
+});
+grid.addEventListener('click', async e => {
+  const rm = e.target.closest('[data-rm]');
+  if (rm){ const id=+rm.dataset.rm; const it=items.find(x=>x.id===id);
+    if (it && it.url && it.kind==='image') URL.revokeObjectURL(it.url);
+    items = items.filter(x=>x.id!==id); scheduleRender(); return; }
+  const cp = e.target.closest('[data-copy]');
+  if (cp){
+    const it = items.find(x=>x.id==cp.dataset.id);
+    if (!it) return;
+    try {
+      await navigator.clipboard.writeText(it[cp.dataset.copy] || '');
+      const orig = cp.innerHTML;
+      cp.classList.add('copied'); cp.innerHTML = ICON_CHECK+'Copied';
+      setTimeout(() => { cp.classList.remove('copied'); cp.innerHTML = orig; }, 1300);
+    } catch(e){ toast('Copy failed', 'err'); }
+  }
+});
+
+function updateButtons(){
+  const hasItems = items.length > 0;
+  const hasDone = items.some(i => i.status === 'done');
+  const hasAnyKey = Object.entries(apiKeys).some(([p,k])=>k&&enabled[p]);
+  genAllBtn.disabled = !hasItems || !hasAnyKey;
+  clearBtn.disabled = !hasItems;
+  exportBtn.disabled = !hasDone;
+  $('fabGen').disabled = !hasItems || !hasAnyKey;
+  $('fabExport').disabled = !hasDone;
+  $('fabClear').disabled = !hasItems;
+}
+
+$('fabGen').onclick = () => generateAll();
+$('fabExport').onclick = () => exportBtn.click();
+$('fabClear').onclick = () => clearBtn.click();
+
+async function getImagePayload(item){
+  if (item.kind === 'image'){
+    if (item.file.type === 'image/svg+xml') return item.frameBase64 ? { base64: item.frameBase64, mediaType: item.frameType } : null;
+    return { base64: await fileToBase64(item.file), mediaType: item.file.type };
+  }
+  if (item.kind === 'video' && item.frameBase64) return { base64: item.frameBase64, mediaType: item.frameType };
+  return null;
+}
+function audioFormatFor(mediaType){
+  if (/wav/i.test(mediaType)) return 'wav';
+  if (/mpeg|mp3/i.test(mediaType)) return 'mp3';
+  return null;
+}
+async function getAudioPayload(item){
+  return { base64: await fileToBase64(item.file), mediaType: item.file.type };
+}
+
+function buildPrompt(item, realAudio){
+  const kwCount = $('kwCount').value || 40, titleLen = $('titleLen').value || 120, descLen = $('descLen').value || 200;
+  let context;
+  if (item.kind === 'image') context = 'You are tagging a photo for stock marketplaces (English-language, US audience). Look at the image and analyze it directly.';
+  else if (item.kind === 'video') context = 'You are tagging a stock video clip. The attached image is one representative frame — use it to infer the video\'s subject, setting and mood.';
+  else if (item.kind === 'audio' && realAudio) context = `You are tagging an audio/ringtone for a stock audio marketplace. Listen to the attached audio clip directly. Filename: "${item.file.name}"${item.duration ? ` (~${Math.round(item.duration)}s)` : ''}.`;
+  else context = `You are tagging an audio/ringtone file named "${item.file.name}"${item.duration ? ` (~${Math.round(item.duration)}s long)` : ''}. You cannot hear it — infer conservatively from filename and duration only.`;
+  return `${context}
+
+Reply with ONLY a JSON object, no markdown fences:
+{"title": "concise, natural, descriptive title, under ${titleLen} characters, no camera/brand names, no filenames", "description": "natural, search-friendly description, under ${descLen} characters, 1-2 full sentences", "keywords": ["single word or short phrase", "... exactly around ${kwCount} relevant, specific, commercially-useful keywords ordered most-to-least relevant — no duplicates, no hashtags"]}`;
+}
+
+function extractJson(raw){ raw = raw.trim(); const m = raw.match(/\{[\s\S]*\}/); return JSON.parse(m ? m[0] : raw); }
+async function safeFetch(url, opts){
+  try { return await fetch(url, opts); }
+  catch(e){ throw new Error('Network error — could not reach the AI provider.'); }
+}
+
+/* ============================================================
+   PROVIDER IMPLEMENTATIONS
+   ============================================================ */
+async function callAnthropic(prompt, img, key){
+  const content = img ? [{ type:'image', source:{ type:'base64', media_type:img.mediaType, data:img.base64 } }, { type:'text', text:prompt }] : [{ type:'text', text:prompt }];
+  const resp = await safeFetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'x-api-key':key, 'anthropic-version':'2023-06-01', 'anthropic-dangerous-direct-browser-access':'true' },
+    body: JSON.stringify({ model:'claude-sonnet-4-5', max_tokens:1500, messages:[{ role:'user', content }] })
+  });
+  if (!resp.ok){ const e = await resp.json().catch(()=>({})); throw new Error((e.error&&e.error.message)||('HTTP '+resp.status)); }
+  const data = await resp.json();
+  const block = (data.content||[]).find(b=>b.type==='text');
+  if (!block) throw new Error('Empty response');
+  return extractJson(block.text);
+}
+
+async function callOpenAI(prompt, img, audio, key){
+  let content, model = 'gpt-4o-mini';
+  if (audio){
+    model = 'gpt-4o-audio-preview';
+    content = [{ type:'text', text:prompt }, { type:'input_audio', input_audio:{ data:audio.base64, format:audio.format } }];
+  } else {
+    content = img ? [{ type:'text', text:prompt }, { type:'image_url', image_url:{ url:'data:'+img.mediaType+';base64,'+img.base64 } }] : [{ type:'text', text:prompt }];
+  }
+  const body = { model, response_format:{type:'json_object'}, messages:[{ role:'user', content }] };
+  if (audio) body.modalities = ['text'];
+  const resp = await safeFetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+key },
+    body: JSON.stringify(body)
+  });
+  if (!resp.ok){ const e = await resp.json().catch(()=>({})); throw new Error((e.error&&e.error.message)||('HTTP '+resp.status)); }
+  const data = await resp.json();
+  const text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  if (!text) throw new Error('Empty response');
+  return extractJson(text);
+}
+
+/* Auth-type errors mean the KEY is bad — retrying with a different model
+   under the same key will never help, so these are the only errors that
+   should stop the per-provider model-fallback loop early. Everything else
+   (model missing, overloaded, rate-limited) should move on to the next
+   candidate model, since a sibling model may well have spare capacity. */
+function isAuthError(msg){
+  return /unauthorized|invalid.*api.?key|api.?key.*invalid|401|403|permission.?denied|credit balance/i.test(msg || '');
+}
+
+/* Gemini — try newest model first, fall back through older ones */
+const GEMINI_MODELS = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3-flash-preview'];
+let geminiWorkingModel = localStorage.getItem('stocktagger_gemini_model') || null;
+
+async function tryGeminiModel(model, parts, key){
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+  const resp = await safeFetch(url, {
+    method: 'POST', headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ contents:[{ parts }], generationConfig:{ responseMimeType:'application/json', maxOutputTokens: 2048 } })
+  });
+  if (!resp.ok){
+    const e = await resp.json().catch(()=>({}));
+    const msg = (e.error&&e.error.message)||('HTTP '+resp.status);
+    const err = new Error(msg);
+    err.httpStatus = resp.status;
+    throw err;
+  }
+  const data = await resp.json();
+  const text = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+  if (!text) throw new Error('Empty response from Gemini');
+  return extractJson(text);
+}
+
+async function callGoogle(prompt, img, audio, key){
+  let parts;
+  if (audio) parts = [{ text:prompt }, { inline_data:{ mime_type:audio.mediaType, data:audio.base64 } }];
+  else parts = img ? [{ text:prompt }, { inline_data:{ mime_type:img.mediaType, data:img.base64 } }] : [{ text:prompt }];
+
+  const candidates = [];
+  if (geminiWorkingModel) candidates.push(geminiWorkingModel);
+  for (const m of GEMINI_MODELS){ if (!candidates.includes(m)) candidates.push(m); }
+
+  let lastErr = null;
+  for (const model of candidates){
+    try {
+      const result = await tryGeminiModel(model, parts, key);
+      if (geminiWorkingModel !== model){
+        geminiWorkingModel = model;
+        localStorage.setItem('stocktagger_gemini_model', model);
+      }
+      return result;
+    } catch(e){
+      lastErr = e;
+      /* Stop only for a bad key; for anything else (model missing,
+         overloaded, rate-limited) keep trying the next model — a sibling
+         version often has spare capacity even when this one is busy. */
+      if (isAuthError(e.message)) throw e;
+    }
+  }
+  throw lastErr || new Error('No working Gemini model found.');
+}
+
+/* ============================================================
+   GROQ — confirmed-working vision model first, then fallbacks.
+   llama-4-scout is intentionally NOT included — it was decommissioned
+   by Groq; keeping it in the list only produces a confusing "model does
+   not exist" as the final error, masking whatever the real problem was
+   with the earlier candidates (usually a rate limit, not a missing
+   model). llama-3.3-70b-versatile is also excluded — it's text-only and
+   errors out (or silently ignores the image) when sent image content.
+   ============================================================ */
+const GROQ_MODELS = [
+  'qwen/qwen3.8-27b',
+  'meta-llama/llama-4-maverick-17b-128e-instruct'
+];
+let groqWorkingModel = localStorage.getItem('stocktagger_groq_model') || null;
+
+async function tryGroqModel(model, content, key){
+  const resp = await safeFetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+key },
+    body: JSON.stringify({ model, response_format:{type:'json_object'}, messages:[{ role:'user', content }] })
+  });
+  if (!resp.ok){
+    const e = await resp.json().catch(()=>({}));
+    const msg = (e.error&&e.error.message)||('HTTP '+resp.status);
+    const err = new Error(msg);
+    err.httpStatus = resp.status;
+    throw err;
+  }
+  const data = await resp.json();
+  const text = data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content;
+  if (!text) throw new Error('Empty response from Groq');
+  return extractJson(text);
+}
+
+async function callGroq(prompt, img, key){
+  const content = img ? [{ type:'text', text:prompt }, { type:'image_url', image_url:{ url:'data:'+img.mediaType+';base64,'+img.base64 } }] : [{ type:'text', text:prompt }];
+
+  const candidates = [];
+  if (groqWorkingModel) candidates.push(groqWorkingModel);
+  for (const m of GROQ_MODELS){ if (!candidates.includes(m)) candidates.push(m); }
+
+  let lastErr = null;
+  for (const model of candidates){
+    try {
+      const result = await tryGroqModel(model, content, key);
+      if (groqWorkingModel !== model){
+        groqWorkingModel = model;
+        localStorage.setItem('stocktagger_groq_model', model);
+      }
+      return result;
+    } catch(e){
+      lastErr = e;
+      if (isAuthError(e.message)) throw e;
+    }
+  }
+  throw lastErr || new Error('No working Groq model.');
+}
+
+/* ============================================================
+   ROUTING + FALLBACK
+   ============================================================ */
+function getActiveProviders(){
+  return priority.filter(p => apiKeys[p] && enabled[p]);
+}
+
+/* Media-type restrictions — some providers can't do certain media.
+   Checked BEFORE a provider is picked (not just inside callProvider) so a
+   permanent "this provider can't do audio" limitation never counts as a
+   real failure against that provider's health/cooldown. */
+function mediaRestriction(item, provider){
+  if (item.kind !== 'audio') return false;
+  if (provider === 'groq') return true;      /* Groq: no audio input */
+  if (provider === 'anthropic') return true; /* Anthropic: no audio input */
+  if (provider === 'openai' && !audioFormatFor(item.file.type)) return true;
+  return false;
+}
+
+function pickProvider(item, tried){
+  const active = getActiveProviders().filter(p => !mediaRestriction(item, p));
+  if (!active.length) return null;
+
+  const now = Date.now();
+  let available = active.filter(p => !tried.has(p) && now >= provHealth[p].cooldownUntil);
+
+  if (!available.length){
+    const fallback = active.filter(p => !tried.has(p));
+    if (!fallback.length) return null;
+    fallback.sort((a,b) => provHealth[a].cooldownUntil - provHealth[b].cooldownUntil);
+    return fallback[0];
+  }
+
+  if (strategy === 'balanced'){
+    const p = available[balancedIdx % available.length];
+    balancedIdx++;
+    return p;
+  }
+
+  for (const p of active){
+    if (available.includes(p)) return p;
+  }
+  return available[0];
+}
+
+function markProviderSuccess(p){
+  provHealth[p].fails = 0;
+  provHealth[p].cooldownUntil = 0;
+  provHealth[p].successes++;
+  provHealth[p].total++;
+}
+function markProviderFail(p, errMsg){
+  provHealth[p].fails++;
+  provHealth[p].total++;
+  const wait = parseRetryAfter(errMsg) || (3000 * Math.min(provHealth[p].fails, 4));
+  provHealth[p].cooldownUntil = Date.now() + wait;
+}
+
+function parseRetryAfter(msg){
+  const m = (msg||'').match(/try again in ([\d.]+)\s*s/i);
+  if (m) return Math.ceil(parseFloat(m[1]) * 1000) + 300;
+  const m2 = (msg||'').match(/try again in ([\d.]+)\s*min/i);
+  if (m2) return Math.ceil(parseFloat(m2[1]) * 60000) + 300;
+  if (/high demand|overloaded|temporarily unavailable|spikes in demand/i.test(msg||'')) return 30000;
+  if (/quota|exceeded|resource_exhausted/i.test(msg||'')) return 60000;
+  if (isAuthError(msg)) return 300000;
+  return null;
+}
+function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+async function callProvider(p, item){
+  const key = apiKeys[p];
+  if (!key) throw new Error('No key for ' + p);
+  const isAudio = item.kind === 'audio';
+
+  if (isAudio){
+    if (p === 'google'){
+      const audio = await getAudioPayload(item);
+      return callGoogle(buildPrompt(item, true), null, audio, key);
+    }
+    if (p === 'openai'){
+      const audio = await getAudioPayload(item);
+      audio.format = audioFormatFor(item.file.type);
+      return callOpenAI(buildPrompt(item, true), null, audio, key);
+    }
+    /* groq/anthropic are excluded from selection entirely via
+       mediaRestriction() in pickProvider(), so we should never get here
+       for them — but throw defensively just in case. */
+    throw new Error(PROVIDERS[p].short + ' does not support audio');
+  }
+
+  const img = await getImagePayload(item);
+  const prompt = buildPrompt(item, false);
+  if (p === 'openai') return callOpenAI(prompt, img, null, key);
+  if (p === 'google') return callGoogle(prompt, img, null, key);
+  if (p === 'groq') return callGroq(prompt, img, key);
+  return callAnthropic(prompt, img, key);
+}
+
+async function callWithFallback(item){
+  const tried = new Set();
+  let lastError = null;
+
+  while (true){
+    const p = pickProvider(item, tried);
+    if (!p) break;
+    tried.add(p);
+
+    try {
+      const data = await withTimeout(callProvider(p, item), 55000, 'Timeout on ' + PROVIDERS[p].short);
+      markProviderSuccess(p);
+      data.__provider = p;
+      return data;
+    } catch(e){
+      const msg = e.message || 'Error';
+      lastError = e;
+      markProviderFail(p, msg);
+      console.warn(`[${PROVIDERS[p].short}] failed: ${msg}`);
+
+      const remaining = getActiveProviders().filter(x => !tried.has(x) && !mediaRestriction(item, x));
+      if (!remaining.length) break;
+
+      item.error = `Trying ${PROVIDERS[remaining[0]].short}…`;
+      scheduleRender();
+      await sleep(80);
+    }
+  }
+
+  if (!getActiveProviders().some(p => !mediaRestriction(item, p))){
+    throw new Error('No enabled provider supports ' + item.kind + ' for this file.');
+  }
+  throw lastError || new Error('All providers failed');
+}
+
+/* ============================================================
+   GENERATE ALL
+   ============================================================ */
+let generating = false;
+async function generateAll(){
+  if (generating) return;
+  const active = getActiveProviders();
+  if (!active.length){ showNotice('Add at least one API key in Settings.', 'warn'); toast('No API keys configured', 'err'); return; }
+
+  clearNotice();
+  generating = true;
+  genAllBtn.disabled = true;
+  Object.keys(provHealth).forEach(p => { provHealth[p].fails = 0; provHealth[p].cooldownUntil = 0; provHealth[p].successes = 0; });
+  balancedIdx = 0;
+
+  const queue = items.filter(i =>
+    i.status !== 'done' &&
+    !(i.kind==='video' && !i.frameBase64) &&
+    !(i.kind==='image' && i.file.type==='image/svg+xml' && !i.frameBase64 && !i.error)
+  );
+
+  if (!queue.length){ showNotice('Nothing to generate.', 'warn'); generating=false; updateButtons(); return; }
+
+  let doneCount = items.length - queue.length;
+  progWrap.style.display = 'block';
+  const total = items.length;
+  const setPct = () => { progFill.style.width = Math.round(doneCount/total*100)+'%'; progPct.textContent = Math.round(doneCount/total*100)+'%'; };
+  setPct();
+
+  /* Concurrency: under 'priority' strategy, most items target the SAME
+     top-priority provider (others are only used once it's cooling down),
+     so scaling parallelism by the number of configured providers doesn't
+     actually spread load — it just floods whichever provider is first,
+     which is exactly what caused repeated Groq rate-limit errors before.
+     Only 'balanced' strategy genuinely spreads concurrent calls across
+     providers, so only it benefits from higher parallelism. */
+  const CONCURRENCY = strategy === 'balanced'
+    ? Math.min(6, Math.max(2, active.length * 2))
+    : Math.min(2, active.length + 1);
+  let idx = 0;
+  let workerSeq = 0;
+
+  async function worker(){
+    /* Stagger each worker's very first request slightly so a batch of
+       items doesn't all hit the same top-priority provider in the same
+       instant — that burst-at-t=0 pattern is what triggered Groq's
+       per-minute rate limit even with reduced concurrency. */
+    await sleep(workerSeq++ * 350);
+    while (idx < queue.length && generating){
+      const item = queue[idx++];
+      const label = item.file.name.length > 28 ? item.file.name.slice(0,28)+'…' : item.file.name;
+      progLabel.textContent = 'Processing: ' + label;
+      item.status = 'working';
+      item.error = '';
+      scheduleRender();
+      try {
+        const data = await callWithFallback(item);
+        item.title = data.title ? String(data.title).trim() : '';
+        item.description = data.description ? String(data.description).trim() : '';
+        item.keywords = Array.isArray(data.keywords) ? data.keywords.join(', ') : '';
+        item.usedProvider = data.__provider || '';
+        item.status = item.title ? 'done' : 'error';
+        if (!item.title) item.error = 'Empty response';
+      } catch(e){
+        item.status = 'error';
+        item.error = e.message || 'All providers failed';
+      }
+      doneCount++;
+      setPct();
+      updateProviderBar();
+      scheduleRender();
+    }
+  }
+
+  await Promise.all(Array.from({length: Math.min(CONCURRENCY, queue.length)}, worker));
+
+  const okCount = items.filter(i=>i.status==='done').length;
+  const errCount = items.filter(i=>i.status==='error').length;
+  progLabel.textContent = 'Complete';
+  if (errCount === 0){
+    showNotice(`All ${okCount} files processed successfully.`, 'ok');
+    toast(`Done — ${okCount} files tagged`, 'ok');
+  } else {
+    showNotice(`${okCount} done, ${errCount} failed.`, 'warn');
+    toast(`${okCount} done, ${errCount} failed`, 'err');
+  }
+  generating = false;
+  genAllBtn.disabled = false;
+  updateButtons();
+}
+genAllBtn.onclick = generateAll;
+
+/* ============================================================
+   EXPORT
+   ============================================================ */
+function csvEscape(s){ s = String(s==null?'':s); if (/[",\n]/.test(s)) s = '"' + s.replace(/"/g,'""') + '"'; return s; }
+function rowsToCsv(rows){ return rows.map(r=>r.map(csvEscape).join(',')).join('\r\n'); }
+function downloadFile(filename, content, mime){
+  const blob = new Blob([content], {type: mime});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+const EXPORTERS = {
+  adobestock: () => { const rows = [['Filename','Title','Keywords','Category','Releases']]; items.filter(i=>i.status==='done').forEach(it => rows.push([it.file.name, it.title, it.keywords, '', ''])); return { filename:'adobestock-metadata.csv', content: rowsToCsv(rows), mime:'text/csv;charset=utf-8' }; },
+  shutterstock: () => { const rows = [['Filename','Description','Keywords','Categories','Editorial','Mature content','Illustration']]; items.filter(i=>i.status==='done').forEach(it => rows.push([it.file.name, it.description || it.title, it.keywords, '', 'no', 'no', 'no'])); return { filename:'shutterstock-metadata.csv', content: rowsToCsv(rows), mime:'text/csv;charset=utf-8' }; },
+  freepik: () => { const rows = [['File name','Title','Keywords']]; items.filter(i=>i.status==='done').forEach(it => rows.push([it.file.name, it.title, it.keywords])); return { filename:'freepik-pod-metadata.csv', content: rowsToCsv(rows), mime:'text/csv;charset=utf-8' }; },
+  istock: () => { const rows = [['file name','title','description','keywords']]; items.filter(i=>i.status==='done').forEach(it => rows.push([it.file.name, it.title, it.description, it.keywords])); return { filename:'istock-metadata.csv', content: rowsToCsv(rows), mime:'text/csv;charset=utf-8' }; },
+  pond5: () => { const rows = [['Filename','Title','Keywords','Description','Category']]; items.filter(i=>i.status==='done').forEach(it => rows.push([it.file.name, it.title, it.keywords, it.description, ''])); return { filename:'pond5-metadata.csv', content: rowsToCsv(rows), mime:'text/csv;charset=utf-8' }; },
+  facebook: () => { const blocks = items.filter(i=>i.status==='done').map(it => { const tags = (it.keywords||'').split(',').map(k=>k.trim()).filter(Boolean).slice(0,15).map(k=>'#'+k.replace(/\s+/g,'')).join(' '); return `${it.file.name}\n\n${it.title}\n\n${it.description}\n\n${tags}`; }); return { filename:'facebook-captions.txt', content: blocks.join('\n\n-----\n\n'), mime:'text/plain;charset=utf-8' }; },
+  youtube: () => { const blocks = items.filter(i=>i.status==='done').map(it => `${it.file.name}\nTitle: ${it.title}\nDescription: ${it.description}\nTags: ${it.keywords}`); return { filename:'youtube-metadata.txt', content: blocks.join('\n\n-----\n\n'), mime:'text/plain;charset=utf-8' }; }
+};
+
+exportBtn.onclick = () => {
+  const fn = EXPORTERS[exportPlatform.value];
+  if (!fn) return;
+  const { filename, content, mime } = fn();
+  downloadFile(filename, content, mime);
+  toast('Exported ' + filename, 'ok');
+};
+
+clearBtn.onclick = () => {
+  if (!items.length) return;
+  if (!confirm('Remove all ' + items.length + ' files?')) return;
+  items.forEach(i => { if (i.url && i.kind==='image') URL.revokeObjectURL(i.url); });
+  items = [];
+  scheduleRender();
+  progWrap.style.display = 'none';
+  clearNotice();
+  toast('Cleared all files', 'info');
+};
+
+/* ============================================================
+   INIT
+   ============================================================ */
+applyView();
+refreshKeyStatus();
+render();
+</script>
+</body>
+</html>
